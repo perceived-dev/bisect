@@ -1,28 +1,13 @@
-export default function bisect({fetch, action, expiry}) {
-  return () => {
-    let promise, timeout;
+export default function bisect({ task, action, expiry = Number.MAX_SAFE_INTEGER }) {
+  return (...args) => {
+    let promise = task(...args);
+    const time = Date.now();
 
-    const module = {
-      clear() {
-        promise = null;
-        clearTimeout(timeout);
-      },
-      start(...args) {
-        if (!promise) {
-          promise = Promise.resolve(fetch(...args));
+    return () => {
+      // if expired fetch again
+      if (expiry !== undefined || Date.now() - time > expiry) promise = task(...args);
 
-          if (expiry) {
-            clearTimeout(timeout);
-            timeout = setTimeout(module.clear, expiry);
-          }
-        }
-
-        return promise;
-      }
-      finish(...args) {
-        return module.start(...args).then((data) => action(data, ...args));
-      }
+      return promise.then(action);
     }
   }
 }
-
