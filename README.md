@@ -1,13 +1,16 @@
 # bisect
+
 Bisect your async task into two steps, first perform ayync work in background and then apply the effect of work.
 
 For example while you are fetching some data and updating view with new data. You can break it in following task to improve perceived experience.
 
 1. fetch the data (async task)
-2. Apply the new data on your view (action)
+2. Apply the new data on your view (effect)
 
 This is more of a pattern than a library. Library is pretty small.
+
 ## usage
+
 ```js
 const start = bisect({
   task(...args) {
@@ -15,13 +18,28 @@ const start = bisect({
     // This method should return a promise.
     return fetch(url);
   },
-  action(data) {
+  effect(data) {
     // this is where the effect from the async is applied. For example you want to update view or state based on api response.
     updateView(data);
   },
-  // Thresold to expire/discard background work by async task if it is not applied before a expiry period. 
+  // Thresold to expire/discard background work by async task if it is not applied before a expiry period.
   // Default to Math.MAX_SAFE_INTEGER (never expire)
-  expiry: 1000  
+  expiry: 1000,
+});
+```
+
+Then you can use it like
+
+```js
+let apply;
+
+// this could be anything, not necessarily mouseenter on button
+button.addEventListener("mouseenter", () => {
+  apply = start(someParam);
+});
+
+button.addEventListener("click", () => {
+  apply();
 });
 ```
 
@@ -33,9 +51,9 @@ A very basic implementation would look something like this.
 
 ```js
 function showProductDetail(productId) {
-  return fetch(`/product/details/${productId}`, )
-    .then(response => response.json())
-    .then(data => {
+  return fetch(`/product/details/${productId}`)
+    .then((response) => response.json())
+    .then((data) => {
       const productDetail = formatData(data);
       openProductDetailDrawer(productDetail);
     });
@@ -45,6 +63,7 @@ function showProductDetail(productId) {
 Ignore the race conditions that can happen on this. In this we are just focusing on fetching a data and displaying them on a view.
 
 Now on a basic flow, the User Interaction and Code Flow would be something like this.
+
 - User clicks on product.
 - Your display a loader.
 - You call showProductDetail method with that product id.
@@ -60,6 +79,7 @@ reduce the overall waiting time as the waiting time starts after user clicks the
 But we can't just call showProductDetail on hover, as we can just predict the user intenton but we are not sure if they will actully click it.
 
 But if we can break this task into two parts.
+
 1. Fetch the product detail when user hovers on the product. (Just the fetch, which doesn't have any effect on view).
 2. Apply the data (call openProductDetailDrawer) on view only when user clicks.
 
@@ -67,8 +87,9 @@ Let's refactor this code into this two methods.
 
 ```js
 function fetchProductDetail(productId) {
-  return fetch(`/product/details/${productId}`, )
-    .then(response => response.json());
+  return fetch(`/product/details/${productId}`).then((response) =>
+    response.json()
+  );
 }
 
 function showProductDetail(data) {
@@ -82,11 +103,11 @@ Then we can call the fetchProductDetail on hover and call showProductDetail on c
 ```js
 let fetchPromise;
 
-card.addEventListener('mouseenter', () => {
+card.addEventListener("mouseenter", () => {
   fetchPromise = fetchProductDetail(productId);
 });
 
-card.addEventListener('click', () => {
+card.addEventListener("click", () => {
   fetchPromise.then(showProductDetail);
 });
 ```
@@ -94,30 +115,29 @@ card.addEventListener('click', () => {
 There might be some other cases like discard promise if it happened before a threshold time.
 Bisect provides a small util for writing it in cleaner way.
 
-
 ```js
 const showProductDetail = bisect({
   task(producdId) {
-    return fetch(`/product/details/${productId}`, )
-      .then(response => response.json());
+    return fetch(`/product/details/${productId}`).then((response) =>
+      response.json()
+    );
   },
-  action(data) {
-      const productDetail = formatData(data);
-      openProductDetailDrawer(productDetail);
+  effect(data) {
+    const productDetail = formatData(data);
+    openProductDetailDrawer(productDetail);
   },
-  expiry: 3000  // default to never expire
+  expiry: 3000, // default to never expire
 });
-
 ```
 
 ```js
 let applyTask;
 
-card.addEventListener('mouseenter', () => {
-  applyTask = startFetch(productId);
+card.addEventListener("mouseenter", () => {
+  applyTask = showProductDetail(productId);
 });
 
-card.addEventListener('click', () => {
+card.addEventListener("click", () => {
   applyTask();
 });
 ```

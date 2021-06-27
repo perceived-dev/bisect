@@ -1,6 +1,6 @@
 {
   "name": "@perceived/bisect",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "Bisect your async job into two steps, first perform work in background and then commit the work.",
   "main": "index.js",
   "scripts": {
