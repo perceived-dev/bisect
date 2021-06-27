@@ -1,11 +1,11 @@
 # bisect
 
-Bisect your async task into two steps, first perform ayync work in background and then apply the effect of work.
+Bisect your async task into two steps, first perform async work in background and then apply the effect of work.
 
-For example while you are fetching some data and updating view with new data. You can break it in following task to improve perceived experience.
+For example while you are fetching some data and updating view with new data. You can break task in following to improve perceived experience.
 
-1. fetch the data (async task)
-2. Apply the new data on your view (effect)
+1. fetch the data (background work)
+2. Apply the new data on your view (effect of work)
 
 This is more of a pattern than a library. Library is pretty small.
 
@@ -13,13 +13,13 @@ This is more of a pattern than a library. Library is pretty small.
 
 ```js
 const start = bisect({
-  task(...args) {
-    // Async task which happens on background and does not have any effect on view or state. like just making fetch call
+  background(...args) {
+    // Async work which happens on background and does not have any effect on view or state. like just making fetch call
     // This method should return a promise.
     return fetch(url);
   },
   effect(data) {
-    // this is where the effect from the async is applied. For example you want to update view or state based on api response.
+    // this is where the effect from the async work is applied. For example you want to update view or state based on api response.
     updateView(data);
   },
   // Thresold to expire/discard background work by async task if it is not applied before a expiry period.
@@ -65,7 +65,7 @@ Ignore the race conditions that can happen on this. In this we are just focusing
 Now on a basic flow, the User Interaction and Code Flow would be something like this.
 
 - User clicks on product.
-- Your display a loader.
+- You display a loader.
 - You call showProductDetail method with that product id.
 - The method fetches the data and once available it shows the data on the view.
 - You clear the loader.
@@ -76,9 +76,9 @@ So when user clicks a product it takes 1050ms for a user to present the result. 
 We can definetly improve this experience. If we start loading the data before hand lets say when user hovers over the card. We can
 reduce the overall waiting time as the waiting time starts after user clicks the product, and we have started loading it before hand.
 
-But we can't just call showProductDetail on hover, as we can just predict the user intenton but we are not sure if they will actully click it.
+But we can't just call showProductDetail on hover, as we can just predict the user intention but we are not sure if they will actully click it.
 
-But if we can break this task into two parts.
+But, we can break this task into two parts.
 
 1. Fetch the product detail when user hovers on the product. (Just the fetch, which doesn't have any effect on view).
 2. Apply the data (call openProductDetailDrawer) on view only when user clicks.
@@ -117,7 +117,7 @@ Bisect provides a small util for writing it in cleaner way.
 
 ```js
 const showProductDetail = bisect({
-  task(producdId) {
+  background(producdId) {
     return fetch(`/product/details/${productId}`).then((response) =>
       response.json()
     );

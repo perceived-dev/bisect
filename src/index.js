@@ -1,16 +1,16 @@
 export default function bisect({
-  task,
+  background,
   effect,
   expiry = Number.MAX_SAFE_INTEGER,
 }) {
   return (...args) => {
-    let promise = task(...args);
+    let promise = background(...args);
     const time = Date.now();
 
     return () => {
       // if expired fetch again
       if (expiry !== undefined || Date.now() - time > expiry) {
-        promise = task(...args);
+        promise = background(...args);
       }
 
       return promise.then(effect);
