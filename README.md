@@ -45,7 +45,7 @@ button.addEventListener("click", () => {
 
 ## Why bisect my async task?
 
-Lets understand with an example. Let's say on a ecommorce site you have the product list. On click of a product you load data and show the detail on side drawer.
+Lets understand with an example. Let's say on an ecommorce site you have the product list. On click of a product you load data and show the detail on side drawer.
 
 A very basic implementation would look something like this.
 
