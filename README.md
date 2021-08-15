@@ -117,7 +117,7 @@ Bisect provides a small util for writing it in cleaner way.
 
 ```js
 const showProductDetail = bisect({
-  background(producdId) {
+  background(productId) {
     return fetch(`/product/details/${productId}`).then((response) =>
       response.json()
     );
